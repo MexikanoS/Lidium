@@ -203,7 +203,7 @@ public class StatsHandling {
         final int amount = slea.readInt();
         final int SecondaryStat = GameConstants.GMS ? (int) slea.readLong() : slea.readInt();
         final int amount2 = slea.readInt();
-        if (amount < 0 || amount2 < 0) {
+        if (amount <= 0 || amount2 < 0) {
             return;
         }
 
@@ -212,7 +212,9 @@ public class StatsHandling {
         Map<MapleStat, Integer> statupdate = new EnumMap<MapleStat, Integer>(MapleStat.class);
         c.getSession().write(CWvsContext.updatePlayerStats(statupdate, true, chr));
 
-        if (chr.getRemainingAp() == amount + amount2) {
+        Boolean appliedst = false;
+        if (chr.getRemainingAp() >= amount)
+        {
             switch (PrimaryStat) {
                 case 64: // Str
                     if (playerst.getStr() + amount > 999) {
@@ -246,6 +248,12 @@ public class StatsHandling {
                     c.getSession().write(CWvsContext.enableActions());
                     return;
             }
+            chr.setRemainingAp((short) (chr.getRemainingAp() - (amount)));
+            appliedst = true;
+        }
+
+        if (chr.getRemainingAp() >= amount2 && amount2 > 0)
+        {
             switch (SecondaryStat) {
                 case 64: // Str
                     if (playerst.getStr() + amount2 > 999) {
@@ -279,7 +287,12 @@ public class StatsHandling {
                     c.getSession().write(CWvsContext.enableActions());
                     return;
             }
-            chr.setRemainingAp((short) (chr.getRemainingAp() - (amount + amount2)));
+            chr.setRemainingAp((short) (chr.getRemainingAp() - (amount2)));
+            appliedst = true;
+        }
+
+        if (appliedst)
+        {
             statupdate.put(MapleStat.AVAILABLEAP, (int) chr.getRemainingAp());
             c.getSession().write(CWvsContext.updatePlayerStats(statupdate, true, chr));
         }
